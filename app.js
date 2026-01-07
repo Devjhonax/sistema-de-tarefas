@@ -1,22 +1,27 @@
-// Importa o Express, as rotas e o banco de dados
 import express from 'express';
 import tarefaRoutes from './routes/tarefaRoutes.js';
-import sequelize from './db.js'; // importa a conexão com o banco
+import sequelize from './db.js';
+import dotenv from 'dotenv';
+import morgan from 'morgan'; // 👉 import do morgan
 
-// Cria a aplicação
+dotenv.config();
+
 const app = express();
 
-// Permite que o servidor entenda o JSON
+// Middleware para logs
+app.use(morgan('dev')); // 👉 mostra logs no terminal
+
+// Permite que o servidor entenda JSON
 app.use(express.json());
 
-// Usa as rotas definidas em tarefaRoutes
+// Usa as rotas
 app.use(tarefaRoutes);
 
 // Sincroniza o banco e inicia o servidor
 sequelize.sync().then(() => {
   console.log('Banco de dados sincronizado');
-  app.listen(3000, () => {
-    console.log('Servidor rodando na porta 3000');
+  app.listen(process.env.PORT, () => {
+    console.log(`Servidor rodando na porta ${process.env.PORT}`);
   });
 }).catch((error) => {
   console.error('Erro ao sincronizar o banco:', error);
