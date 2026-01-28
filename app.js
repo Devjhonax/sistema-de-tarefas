@@ -25,3 +25,5 @@ sequelize.sync()
   .catch((error) => {
     console.error('Erro ao sincronizar o banco:', error);
   });
+
+export default app;
