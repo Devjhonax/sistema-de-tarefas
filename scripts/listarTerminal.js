@@ -1,36 +1,85 @@
-// Importa o controlador que tem os métodos para lidar com tarefas
-import TarefaController from '../controllers/TarefaController.js';
+const API_URL = "http://localhost:3000/tarefas";
 
-// Cria uma instância do controlador
-const controller = new TarefaController();
+const form = document.getElementById("form-tarefa");
+const listaPendentes = document.getElementById("lista-pendentes");
+const listaAndamento = document.getElementById("lista-andamento");
+const listaConcluidas = document.getElementById("lista-concluidas");
 
-// Função que busca e mostra as tarefas no terminal
-async function listarTarefasNoTerminal() {
-  try {
-    // Simula a resposta da API com uma função que mostra os dados no terminal
-    const req = {}; 
-    const res = {
-      json: (tarefas) => {
-        // Mostra as tarefas no terminal
-        tarefas.forEach(tarefa => {
-          console.log('ID:', tarefa.id);
-          console.log('Título:', tarefa.titulo);
-          console.log('Descrição:', tarefa.descricao);
-          console.log('Status:', tarefa.status);
-          console.log('------------------');
-        });
-      },
-      status: (codigo) => ({
-        json: (erro) => console.error(`Erro ${codigo}:`, erro)
-      })
-    };
+// Função para renderizar tarefas
+async function carregarTarefas() {
+  const res = await fetch(API_URL);
+  const tarefas = await res.json();
 
-    // Chama o método que lista as tarefas
-    await controller.listarTodos(req, res);
-  } catch (error) {
-    console.error('Erro ao listar tarefas:', error.message);
-  }
+  // Limpa listas
+  listaPendentes.innerHTML = "";
+  listaAndamento.innerHTML = "";
+  listaConcluidas.innerHTML = "";
+
+  tarefas.forEach(tarefa => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="tarefa-info">
+        <strong>${tarefa.titulo}</strong>
+        ${tarefa.descricao ? `<p class="descricao">${tarefa.descricao}</p>` : ""}
+      </div>
+      <span class="status-${tarefa.status}">${tarefa.status}</span>
+      ${tarefa.status === "pendente" ? `<button class="andamento" data-id="${tarefa.id}">Iniciar</button>` : ""}
+      ${tarefa.status === "andamento" ? `<button class="concluir" data-id="${tarefa.id}">Concluir</button>` : ""}
+      <button class="excluir" data-id="${tarefa.id}">Excluir</button>
+    `;
+
+    if (tarefa.status === "pendente") listaPendentes.appendChild(li);
+    else if (tarefa.status === "andamento") listaAndamento.appendChild(li);
+    else if (tarefa.status === "concluida") listaConcluidas.appendChild(li);
+  });
 }
 
-// Executa a função
-listarTarefasNoTerminal();
+// Adicionar nova tarefa
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const titulo = document.getElementById("titulo").value.trim();
+  const descricao = document.getElementById("descricao").value.trim();
+
+  if (!titulo) return;
+
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ titulo, descricao, status: "pendente" })
+  });
+
+  form.reset();
+  carregarTarefas();
+});
+
+document.addEventListener("click", async function (e) {
+  const btn = e.target;
+  const id = btn.dataset.id;
+
+  if (!id) return;
+
+  if (btn.classList.contains("andamento")) {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "andamento" })
+    });
+  }
+
+  if (btn.classList.contains("concluir")) {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "concluida" })
+    });
+  }
+
+  if (btn.classList.contains("excluir")) {
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  }
+
+  carregarTarefas();
+});
+
+carregarTarefas();

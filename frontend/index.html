@@ -5,36 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minhas Tarefas</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <div class="container">
-    <div class="left">
-      <h1>📋 Minhas Tarefas</h1>
-      <p class="subtitle">Organize seu dia com eficiência e simplicidade</p>
+  <header>
+    <h1>📝 Minhas Tarefas</h1>
+    <p class="descricao-header">Organize seu dia com eficiência e simplicidade</p>
+  </header>
 
-      <section class="form-section">
-        <h2>➕ Adicionar nova tarefa</h2>
-        <form id="form-tarefa">
-          <input type="text" id="titulo" placeholder="Título da tarefa" required />
-          <input type="text" id="descricao" placeholder="Descrição (opcional)" />
-          <button type="submit">Adicionar</button>
-        </form>
-      </section>
-    </div>
+  <main>
+    <!-- Seção de adicionar tarefa -->
+    <section class="form-section">
+      <h2>➕ Adicionar nova tarefa</h2>
+      <form id="form-tarefa">
+        <input type="text" id="titulo" placeholder="Título da tarefa" required />
+        <input type="text" id="descricao" placeholder="Descrição (opcional)" />
+        <button type="submit">Adicionar</button>
+      </form>
+    </section>
 
-    <div class="right">
-      <img src="img/imagem_tarefa.jpg" alt="Ilustração de tarefas" />
-      <div class="pendentes">
-        <h2>📌 Tarefas pendentes</h2>
-        <!-- Lista de tarefas renderizada pelo script.js -->
-        <ul id="lista-tarefas"></ul>
-        <footer>
-          <p>Desenvolvido por Thayane Gomes | Sistema de Tarefas</p>
-        </footer>
+    <!-- Seção de tarefas -->
+    <section class="tarefas">
+      <div class="coluna">
+        <h2>⭐ Tarefas pendentes</h2>
+        <ul id="lista-pendentes"></ul>
       </div>
-    </div>
-  </div>
+
+      <div class="coluna">
+        <h2>🔄 Tarefas em andamento</h2>
+        <ul id="lista-andamento"></ul>
+      </div>
+
+      <div class="coluna">
+        <h2>✅ Tarefas concluídas</h2>
+        <ul id="lista-concluidas"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    <p>Sistema de Tarefas</p>
+    <p class="creditos">Desenvolvido por Thayane Gomes</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>

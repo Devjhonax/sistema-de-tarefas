@@ -1,92 +1,107 @@
-const API_URL = "http://localhost:3000/tarefas"; // depois trocamos para o Render
 
-// Carregar tarefas (GET)
+const API_URL = "http://localhost:3000/tarefas"
+
+const form = document.getElementById("form-tarefa")
+const listaPendentes = document.getElementById("lista-pendentes")
+const listaAndamento = document.getElementById("lista-andamento")
+const listaConcluidas = document.getElementById("lista-concluidas")
+
+// renderiza tarefas
 async function carregarTarefas() {
   try {
-    const resposta = await fetch(API_URL);
-    const tarefas = await resposta.json();
+    const res = await fetch(API_URL)
+    const tarefas = await res.json()
 
-    const lista = document.getElementById("lista-tarefas");
-    lista.innerHTML = "";
-
-    if (tarefas.length === 0) {
-      lista.innerHTML = "<li>Nenhuma tarefa cadastrada ainda. Adicione uma acima!</li>";
-      return;
-    }
+    listaPendentes.innerHTML = ""
+    listaAndamento.innerHTML = ""
+    listaConcluidas.innerHTML = ""
 
     tarefas.forEach(tarefa => {
-      const li = document.createElement("li");
+      const li = document.createElement("li")
       li.innerHTML = `
-        <span>${tarefa.titulo} - ${tarefa.status || "pendente"}</span>
-        <div>
-          <button onclick="atualizarTarefa('${tarefa.id}')">✅ Concluir</button>
-          <button onclick="deletarTarefa('${tarefa.id}')">🗑️ Excluir</button>
+        <div class="tarefa-info">
+          <strong>${tarefa.titulo}</strong>
+          ${tarefa.descricao ? `<p class="descricao">${tarefa.descricao}</p>` : ""}
         </div>
-      `;
-      lista.appendChild(li);
-    });
-  } catch (erro) {
-    console.error("Erro ao carregar tarefas:", erro);
-    alert("Não foi possível carregar as tarefas. Tente novamente mais tarde.");
+        <span class="status-${tarefa.status}">${tarefa.status}</span>
+        ${tarefa.status === "pendente" ? `<button class="andamento" data-id="${tarefa.id}">Iniciar</button>` : ""}
+        ${tarefa.status === "andamento" ? `<button class="concluir" data-id="${tarefa.id}">Concluir</button>` : ""}
+        <button class="editar" data-id="${tarefa.id}">Editar</button>
+        <button class="excluir" data-id="${tarefa.id}">Excluir</button>
+      `
+
+      if (tarefa.status === "pendente") listaPendentes.appendChild(li)
+      else if (tarefa.status === "andamento") listaAndamento.appendChild(li)
+      else listaConcluidas.appendChild(li)
+    })
+  } catch (err) {
+    console.log("erro ao carregar tarefas", err)
   }
 }
 
-// Criar tarefa (POST)
-document.getElementById("form-tarefa").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const titulo = document.getElementById("titulo").value;
-  const descricao = document.getElementById("descricao").value;
+// adicionar nova
+form.addEventListener("submit", async function (e) {
+  e.preventDefault()
+  const titulo = document.getElementById("titulo").value.trim()
+  const descricao = document.getElementById("descricao").value.trim()
+  if (!titulo) return
 
-  if (!titulo.trim()) {
-    alert("Por favor, insira um título para a tarefa.");
-    return;
-  }
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ titulo, descricao, status: "pendente" })
+  })
 
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ titulo, descricao, status: "pendente" })
-    });
+  form.reset()
+  carregarTarefas()
+})
 
-    alert("Tarefa adicionada com sucesso!");
-    document.getElementById("form-tarefa").reset();
-    carregarTarefas();
-  } catch (erro) {
-    console.error("Erro ao criar tarefa:", erro);
-    alert("Não foi possível adicionar a tarefa.");
-  }
-});
+// ações dos botões
+document.addEventListener("click", async function (e) {
+  const btn = e.target
+  const id = btn.dataset.id
+  if (!id) return
 
-// Atualizar tarefa (PUT)
-async function atualizarTarefa(id) {
-  try {
+  if (btn.classList.contains("andamento")) {
     await fetch(`${API_URL}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "concluída" })
-    });
-    alert("Tarefa marcada como concluída!");
-    carregarTarefas();
-  } catch (erro) {
-    console.error("Erro ao atualizar tarefa:", erro);
-    alert("Não foi possível atualizar a tarefa.");
+      body: JSON.stringify({ status: "andamento" })
+    })
   }
-}
 
-// Deletar tarefa (DELETE)
-async function deletarTarefa(id) {
-  if (!confirm("Tem certeza que deseja excluir esta tarefa?")) return;
-
-  try {
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    alert("Tarefa excluída com sucesso!");
-    carregarTarefas();
-  } catch (erro) {
-    console.error("Erro ao deletar tarefa:", erro);
-    alert("Não foi possível excluir a tarefa.");
+  if (btn.classList.contains("concluir")) {
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "concluida" })
+    })
   }
-}
 
-// Inicializar
-carregarTarefas();
+  if (btn.classList.contains("editar")) {
+    const li = btn.closest("li")
+    const tituloAtual = li.querySelector("strong").textContent
+    const descricaoAtual = li.querySelector(".descricao") ? li.querySelector(".descricao").textContent : ""
+
+    const novoTitulo = prompt("Novo título:", tituloAtual)
+    const novaDescricao = prompt("Nova descrição:", descricaoAtual)
+
+    if (novoTitulo !== null && novaDescricao !== null) {
+      await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo: novoTitulo, descricao: novaDescricao })
+      })
+      carregarTarefas()
+    }
+  }
+
+  if (btn.classList.contains("excluir")) {
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+  }
+
+  carregarTarefas()
+})
+
+// inicia
+carregarTarefas()
