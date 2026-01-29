@@ -19,4 +19,8 @@ app.use(express.json());
 
 app.use('/', tarefaRoutes);
 
-export default app;
+const PORT = process.env.PORT
+
+app.listen(PORT, ()=> {
+  console.log("servidor rodando.")
+});
