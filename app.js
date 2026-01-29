@@ -1,4 +1,3 @@
-
 import express from 'express';
 import tarefaRoutes from './routes/tarefaRoutes.js';
 import dotenv from 'dotenv';
